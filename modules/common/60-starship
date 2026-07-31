@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+
+# Cross-shell prompt. The hostname segment is the real win across a 7-box
+# fleet -- always know which machine you're typing into. Color-code Hydra-Lair
+# red in starship.toml so `rm -rf` on the wrong box gets harder.
+starship_version() { starship --version | awk 'NR==1 {print $2}'; }
+
+ensure starship starship starship_version

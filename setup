@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+usage() {
+	cat <<-EOF
+	Usage: ./run [options]
+
+	Options:
+	  -d, --dry               Show what would run, without executing
+
+	  -f, --filter <list>     Only run scripts matching these comma-separated terms
+	                          e.g. --filter tmux,neovim
+
+	  -l, --list              List available scripts for this OS and exit
+
+	  -h, --help              Shows this help
+	EOF
+}
+
+script_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+filter=""
+dry="0"
+list="0"
+
+while [[ $# > 0 ]]; do
+	case "$1" in
+		-d|--dry)
+			dry="1" 
+			;;
+		-f|--filter)
+			filter="$2"
+			shift
+			;;
+		-f=*|--filter=*)
+			filter="${1#*=}"
+			;;
+		-l|--list)
+			list="1"
+			;;
+		-h|--help)
+			usage
+			exit 0
+			;;
+		*)
+			echo "Unknown option: $1" >&2
+			usage >&2
+			exit 1
+			;;
+	esac
+	shift
+done
+
+export dry
+
+case "$(uname -s)" in
+	Darwin) os="mac" ;;
+	Linux) os="ubuntu" ;;
+	*) echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
+esac
+
+cd $script_dir
+source ./runs/lib.sh
+
+log "$script_dir -- os:$os -- $filter"
+
+runs_dir="./runs/$os"
+[[ -d $runs_dir ]] || { echo "No scripts directory: $runs_dir" >&2; exit 1; }
+
+scripts=$(find ./runs/common "$runs_dir" -maxdepth 1 -mindepth 1 -type f ! -name '*.sh' 2>/dev/null | sort)
+
+if [[ -z $scripts ]]; then
+	echo "No executable scripts found in: ./runs/common $runs_dir" >&2
+	exit 1
+fi
+
+if [[ $list == "1" ]]; then
+	echo "Scripts for $os:"
+	for script in $scripts; do
+		[[ -x $script ]] || { log "Skipped (not executable): $script"; continue; }
+		echo "  $(basename "$script")"
+	done
+	exit 0
+fi
+
+filter_re="${filter//,/|}"
+
+for script in $scripts; do
+	name="${script#./runs/}"
+
+	[[ -x $script ]] || { log "Skipped (not executable): $script"; continue; }
+	
+	if [[ -n $filter_re ]] && ! echo "$script" | grep -qE "$filter_re"; then
+		log "Filtered: $name"
+		continue
+	fi
+
+	log "------ $name ------"
+	"$script"
+
+done

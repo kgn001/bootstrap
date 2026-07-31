@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+
+nvim_version() { nvim --version |awk 'NR==1 {print $2}'; }
+
+ensure_github_release nvim neovim/neovim nvim_version "nvim-{os}-{arch}.tar.gz" "v0.10.4"

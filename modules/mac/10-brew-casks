@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+ 
+# GUI apps via Homebrew Cask. Casks aren't CLI binaries, so `command -v`
+# won't find them -- check for the .app bundle / brew's own list instead.
+ 
+ensure_cask() {
+	local app="$1" cask="$2"
+ 
+	if [[ -d "/Applications/$app.app" ]] || brew list --cask "$cask" >/dev/null 2>&1; then
+		local current latest
+		current=$(brew list --versions --cask "$cask" 2>/dev/null | awk '{print $2}')
+		log "$cask: installed (${current:-unknown})"
+ 
+		latest=$(brew info --json=v2 --cask "$cask" 2>/dev/null \
+			| grep -o '"version":"[^"]*"' | head -1 | cut -d'"' -f4)
+ 
+		if [[ -n $latest && -n $current && $current != "$latest" ]]; then
+			log "$cask: update available ($current -> $latest)"
+			confirm "Upgrade $cask?" && execute brew upgrade --cask "$cask"
+		else
+			log "$cask: up to date"
+		fi
+	else
+		log "$cask: not installed"
+		execute brew install --cask "$cask"
+	fi
+}
+ 
+ensure_cask "Ghostty"    ghostty
+ensure_cask "Stats"      stats
+ensure_cask "Alfred"     alfred
+ensure_cask "Bitwarden"  bitwarden
+ensure_cask "Rectangle"  rectangle
+ensure_cask "Moonlight"  moonlight
+
