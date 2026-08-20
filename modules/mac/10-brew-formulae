@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+
+ensure_formula() {
+	local formula="$1"
+
+	if ! brew list --formula --versions "$formula" >/dev/null 2>&1; then
+		log "$formula: not installed"
+		execute brew install "$formula"
+		return
+	fi
+
+	local current latest
+	current=$(brew list --formula --version "$formula" | awk '{print $2}')
+	log "$formula: installed ($current)"
+
+	latest=$(pkg_latest "formula")
+
+	if [[ -n $latest && $current != *"$latest"* ]]; then
+		log "$formula: update available ($current -> $latest)"
+		confirm "Upgrade $formula?" && execute brew upgrade "$formula"
+	else
+		log "$formula: up to date"
+	fi
+}
+
+# List of formulae to install
+ensure_formula pam-reattach
