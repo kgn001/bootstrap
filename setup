@@ -2,12 +2,12 @@
 
 usage() {
 	cat <<-EOF
-	Usage: ./run [options]
+	Usage: ./setup [options]
 
 	Options:
-	  -d, --dry               Show what would run, without executing
+	  -d, --dry               Show what would be setup, without executing
 
-	  -f, --filter <list>     Only run scripts matching these comma-separated terms
+	  -f, --filter <list>     Only setup modules matching these comma-separated terms
 	                          e.g. --filter tmux,neovim
 
 	  -l, --list              List available scripts for this OS and exit
@@ -58,17 +58,17 @@ case "$(uname -s)" in
 esac
 
 cd $script_dir
-source ./runs/lib.sh
+source ./modules/lib.sh
 
 log "$script_dir -- os:$os -- $filter"
 
-runs_dir="./runs/$os"
-[[ -d $runs_dir ]] || { echo "No scripts directory: $runs_dir" >&2; exit 1; }
+modules_dir="./modules/$os"
+[[ -d $modules_dir ]] || { echo "No scripts directory: $modules_dir" >&2; exit 1; }
 
-scripts=$(find ./runs/common "$runs_dir" -maxdepth 1 -mindepth 1 -type f ! -name '*.sh' 2>/dev/null | sort)
+scripts=$(find ./modules/common "$modules_dir" -maxdepth 1 -mindepth 1 -type f ! -name '*.sh' 2>/dev/null | sort)
 
 if [[ -z $scripts ]]; then
-	echo "No executable scripts found in: ./runs/common $runs_dir" >&2
+	echo "No executable scripts found in: ./modules/common $modules_dir" >&2
 	exit 1
 fi
 
@@ -84,7 +84,7 @@ fi
 filter_re="${filter//,/|}"
 
 for script in $scripts; do
-	name="${script#./runs/}"
+	name="${script#./modules/}"
 
 	[[ -x $script ]] || { log "Skipped (not executable): $script"; continue; }
 	
