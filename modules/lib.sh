@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# modules/lob.sh - helper functions sourced by each module
+# modules/lib.sh - helper functions sourced by each module
 
 # --------------------------------------------------
 # Dry run functions
 # --------------------------------------------------
-# $dry is exported by ./run, default to 0 if run standalone
+# $dry is exported by ./setup, default to 0 if run standalone
 dry="${dry:-0}"
 
 log() {
