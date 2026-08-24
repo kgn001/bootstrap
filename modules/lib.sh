@@ -27,7 +27,7 @@ execute() {
 confirm() {
 	# auto decline for dry runs
 	if [[ $dry == "1" ]]; then
-		log "would prompt: $1 [y/N]"
+		log "  would prompt: $1 [y/N]"
 		return 1
 	fi
 	read -r -p "$1 [y/N] " reply
@@ -121,10 +121,10 @@ ensure_github_release() {
 
 	local want="$pinned"
 	if [[ -n $want ]]; then
-		log "$cmd: pinned to $want"
+		log " $cmd: pinned to $want"
 	else
 		want=$(github_latest_tag "$repo")
-		[[ -z $want ]] && { log "$cmd: could not query latest release"; return 1; }
+		[[ -z $want ]] && { log " $cmd: could not query latest release"; return 1; }
 	fi
 
 	if command -v "$cmd" >/dev/null 2>&1; then
@@ -133,19 +133,19 @@ ensure_github_release() {
 		if [[ $current == *"${want#v}"* ]]; then
 			if [[ -n $pinned ]]; then
 				local newest
-				newest=$(github_laest_tag "$repo")
+				newest=$(github_latest_tag "$repo")
 				if [[ -n $newest && $newest != "$want" ]]; then
-					log "$cmd: currently at version $want ($newest available - edit module to update)"
+					log " $cmd: currently at version $want ($newest available - edit module to update)"
 					return
 				fi
 			fi
-			log "$cmd: up to date ($current)"
+			log " $cmd: up to date ($current)"
 			return
 		fi
-		log "$cmd: $current -> $want available"
+		log " $cmd: $current -> $want available"
 		confirm "Update $cmd to $want?" || return
 	else
-		log "$cmd: not installed, will fetch $want"
+		log " $cmd: not installed, will fetch $want"
 	fi
 
 	local asset="${asset_tpl//\{os\}/$OS_TAG}"
@@ -162,7 +162,7 @@ ensure_github_release() {
 
 	execute cp -R "$temp/bin" "$temp/lib" "$temp/share" "$LOCAL_PREFIX/" 2>/dev/null
 	rm -rf "$temp"
-	log "$cmd: installed $want to $LOCAL_PREFIX"
+	log " $cmd: installed $want to $LOCAL_PREFIX"
 }
 
 # --------------------------------------------------
@@ -170,10 +170,10 @@ ensure_github_release() {
 # --------------------------------------------------
 
 ensure() {
-	local cmd="$1" pkg="$2" version_fn="$3"
+	local cmd="$1" pkg="${2:-$1}" version_fn="${3:-}"
 
 	if ! pkg_installed "$cmd"; then
-		log "$cmd: not installed"
+		log " $cmd: not installed"
 		pkg_install "$pkg"
 		return
 	fi
@@ -188,12 +188,12 @@ ensure() {
 	local latest
 	latest=$(pkg_latest "$pkg")
 	if [[ -z $latest ]]; then
-		log "$cmd: installed ($current), but $PM has no candidate for '$pkg'"
+		log " $cmd: $current already installed, but $PM has no candidate for '$pkg'"
 	elif [[ $current != *"$latest"* ]]; then
-		log "$cmd: update available ($current -> $latest)"
-		confirm "Upgrade $cmd?" && pkg_upgrade "$pkg"
+		log " $cmd: update available ($current -> $latest)"
+		confirm "  upgrade $cmd?" && pkg_upgrade "$pkg"
 	else
-		log "$cmd: up to date ($current)"
+		log " $cmd: up to date ($current)"
 	fi
 }
 

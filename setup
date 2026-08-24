@@ -60,7 +60,7 @@ esac
 cd $script_dir
 source ./modules/lib.sh
 
-log "$script_dir -- os:$os -- $filter"
+#log "${script_dir/#$HOME/\~} -- os:$os -- $filter"
 
 modules_dir="./modules/$os"
 [[ -d $modules_dir ]] || { echo "No scripts directory: $modules_dir" >&2; exit 1; }
@@ -68,12 +68,12 @@ modules_dir="./modules/$os"
 scripts=$(find ./modules/common "$modules_dir" -maxdepth 1 -mindepth 1 -type f ! -name '*.sh' 2>/dev/null | sort)
 
 if [[ -z $scripts ]]; then
-	echo "No executable scripts found in: ./modules/common $modules_dir" >&2
+	echo "No executable scripts found in: ./modules/common or $modules_dir" >&2
 	exit 1
 fi
 
 if [[ $list == "1" ]]; then
-	echo "Scripts for $os:"
+	echo "Listing all scripts for $os:"
 	for script in $scripts; do
 		[[ -x $script ]] || { log "Skipped (not executable): $script"; continue; }
 		echo "  $(basename "$script")"

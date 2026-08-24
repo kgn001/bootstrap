@@ -1,36 +1,46 @@
 #!/usr/bin/env bash
+# mac/10-brew-casks - GUI applications installed through Brew
 source "$(dirname "$0")/../lib.sh"
  
-# GUI apps via Homebrew Cask. Casks aren't CLI binaries, so `command -v`
-# won't find them -- check for the .app bundle / brew's own list instead.
- 
+outdated_casks=$(brew outdated --cask --greedy-auto-updates --verbose 2>/dev/null || true)
+
 ensure_cask() {
-	local app="$1" cask="$2"
+	local cask="$1" app="${2:-}"
+	local current latest
  
-	if [[ -d "/Applications/$app.app" ]] || brew list --cask "$cask" >/dev/null 2>&1; then
-		local current latest
+	if brew list --cask "$cask" >/dev/null 2>&1; then
 		current=$(brew list --versions --cask "$cask" 2>/dev/null | awk '{print $2}')
-		log "$cask: installed (${current:-unknown})"
- 
-		latest=$(brew info --json=v2 --cask "$cask" 2>/dev/null \
-			| grep -o '"version":"[^"]*"' | head -1 | cut -d'"' -f4)
- 
-		if [[ -n $latest && -n $current && $current != "$latest" ]]; then
-			log "$cask: update available ($current -> $latest)"
-			confirm "Upgrade $cask?" && execute brew upgrade --cask "$cask"
+		latest=$(awk -v c="$cask" '$1 == c { print $NF }' <<<"$outdated_casks")
+
+		if [[ -n $latest ]]; then
+			log " $cask: update available (${current:-unknown} -> $latest)"
+			confirm "  upgrade $cask?" && execute brew upgrade --cask --greedy-auto-updates --quiet "$cask"
 		else
-			log "$cask: up to date"
+			log " $cask: up to date (${current:-unknown})"
 		fi
-	else
-		log "$cask: not installed"
-		execute brew install --cask "$cask"
+		return
 	fi
+
+	if [[ -n $app && -d "/Applications/$app.app" ]]; then
+		log " $cask: $app.app present, not managed by Homebrew"
+		confirm "  let Homebrew adopt $cask?" && execute brew install --cask --adopt --quiet "$cask"
+		return
+	fi
+
+	log " $cask: not installed"
+	execute brew install --cask --quiet "$cask"
 }
  
-ensure_cask "Ghostty"    ghostty
-ensure_cask "Stats"      stats
-ensure_cask "Alfred"     alfred
-ensure_cask "Bitwarden"  bitwarden
-ensure_cask "Rectangle"  rectangle
-ensure_cask "Moonlight"  moonlight
-
+ensure_cask firefox Firefox #Browser
+ensure_cask ghostty Ghostty #Terminal
+ensure_cask secretive Secretive #SSH keys locked with touch id
+ensure_cask stats Stats #Provides system stats in top bar
+ensure_cask alfred Alfred #Beter search - replaces Alfred
+ensure_cask bitwarden Bitwarden #Password manager
+ensure_cask rectangle Rectangle #Window manager
+ensure_cask dropzone "Dropzone 4" #drag and drop helper in top bar
+ensure_cask moonlight Moonlight #game/desktop streaming client
+ensure_cask discord Discord #chat
+ensure_cask unnaturalscrollwheels UnnaturalScrollWheels #sllows reversing mouse scroll wheel
+ensure_cask vlc VLC #video player
+ensure_cask arduino-ide "Arduino IDE" #for programming arduino and ESP boards
