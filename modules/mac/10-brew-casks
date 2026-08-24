@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# mac/10-brew-casks - GUI applications installed through Brew
 source "$(dirname "$0")/../lib.sh"
  
 outdated_casks=$(brew outdated --cask --greedy-auto-updates --verbose 2>/dev/null || true)
