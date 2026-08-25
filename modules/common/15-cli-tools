@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+
+ensure rg ripgrep
+ensure eza
+ensure jq
+ensure tree
+ensure fzf
+ensure zoxide
+
+# fd/bat are fdfind/batcat on apt
+if [[ $PM == "apt" ]]; then
+	ensure fdfind fd-find
+	ensure batcat bat
+else
+	ensure fd
+	ensure bat
+fi
