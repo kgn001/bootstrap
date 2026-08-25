@@ -5,22 +5,22 @@ ensure_formula() {
 	local formula="$1"
 
 	if ! brew list --formula --versions "$formula" >/dev/null 2>&1; then
-		log "$formula: not installed"
+		log " $formula: not installed"
 		execute brew install "$formula"
 		return
 	fi
 
 	local current latest
 	current=$(brew list --formula --version "$formula" | awk '{print $2}')
-	log "$formula: installed ($current)"
+	log " $formula: installed ($current)"
 
 	latest=$(pkg_latest "formula")
 
 	if [[ -n $latest && $current != *"$latest"* ]]; then
-		log "$formula: update available ($current -> $latest)"
-		confirm "Upgrade $formula?" && execute brew upgrade "$formula"
+		log " $formula: update available ($current -> $latest)"
+		confirm "  upgrade $formula?" && execute brew upgrade "$formula"
 	else
-		log "$formula: up to date"
+		log " $formula: up to date"
 	fi
 }
 
