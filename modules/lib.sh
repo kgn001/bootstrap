@@ -16,7 +16,7 @@ log() {
 }
 
 execute() {
-	log "execute $@"
+	log "  execute $@"
         if [[ $dry == "1" ]]; then
                 return
         fi
@@ -27,7 +27,7 @@ execute() {
 confirm() {
 	# auto decline for dry runs
 	if [[ $dry == "1" ]]; then
-		log "  would prompt: $1 [y/N]"
+		log "$1 [y/N] - automatic No"
 		return 1
 	fi
 	read -r -p "$1 [y/N] " reply
@@ -92,7 +92,9 @@ pkg_upgrade() {
 pkg_latest() {
 	local version
 	if [[ $PM == "brew" ]]; then
-		version=$(brew info --json=v2 "$1" 2>/dev/null | grep -o '"stable":"[^"]*"' \
+		version=$(brew info --json=v2 "$1" 2>/dev/null \
+			| tr -d ' \t\n' \
+			| grep -o '"stable":"[^"]*"' \
 			| head -1 | cut -d'"' -f4)
 	else
 		version=$(apt-cache policy "$1" 2>/dev/null | awk '/Candidate:/ {print $2}')
