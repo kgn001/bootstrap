@@ -4,7 +4,7 @@ source "$(dirname "$0")/../lib.sh"
 font_name="JetBrainsMono Nerd Font"
 font_dir="$HOME/.local/share/fonts/JetBrainsMono"
 
-if [[ $IS_WSL =="1" ]]; then
+if [[ $IS_WSL == "1" ]]; then
 	log "  $font_name: WSL requires fonts to be installed on Windows. Install manually: https://github.com/ryanoasis/nerd-fonts/releases"
 	exit 0
 fi
