@@ -2,3 +2,4 @@
 source "$(dirname "$0")/../lib.sh"
 
 ensure git
+ensure gh
