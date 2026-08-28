@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/../lib.sh"
 
+eza_version() {
+	eza --version | awk 'NR==2 {print $1}'; 
+}
+
+tree_version() {
+	tree --version | awk 'NR==1 {print $2}'; 
+}
+
 ensure rg ripgrep
-ensure eza
+ensure eza eza eza_version
 ensure jq
-ensure tree
+ensure tree tree tree_version
 ensure fzf
 ensure zoxide
 
