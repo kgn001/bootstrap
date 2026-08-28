@@ -6,4 +6,12 @@ source "$(dirname "$0")/../lib.sh"
 # red in starship.toml so `rm -rf` on the wrong box gets harder.
 starship_version() { starship --version | awk 'NR==1 {print $2}'; }
 
-ensure starship starship starship_version
+if [[ $PM == "apt" ]]; then
+	if pkg_installed starship; then
+		log "  starship: already installed ($(starship_version))"
+	else
+		execute env BIN_DIR="$LOCAL_BIN" /bin/bash -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes
+	fi
+else
+	ensure starship starship starship_version
+fi
