@@ -10,7 +10,7 @@ if [[ $PM == "apt" ]]; then
 	if pkg_installed starship; then
 		log "  starship: already installed ($(starship_version))"
 	else
-		execute env BIN_DIR="$LOCAL_BIN" /bin/bash -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes
+		execute sh -c "curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir '$LOCAL_BIN'"
 	fi
 else
 	ensure starship starship starship_version
