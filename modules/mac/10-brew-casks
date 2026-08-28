@@ -30,6 +30,7 @@ ensure_cask() {
 	execute brew install --cask --quiet "$cask"
 }
  
+ensure_cask font-jetbrains-mono-nerd-font #Nerdfont I use
 ensure_cask firefox Firefox #Browser
 ensure_cask ghostty Ghostty #Terminal
 ensure_cask secretive Secretive #SSH keys locked with touch id

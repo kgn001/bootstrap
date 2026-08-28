@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+
+font_name="JetBrainsMono Nerd Font"
+font_dir="$HOME/.local/share/fonts/JetBrainsMono"
+
+if [[ $IS_WSL =="1" ]]; then
+	log "  $font_name: WSL requires fonts to be installed on Windows. Install manually: https://github.com/ryanoasis/nerd-fonts/releases"
+	exit 0
+fi
+
+if [[ -d $font_dir ]] && ls "$font_dir"/*.ttf >/dev/null 2>&1; then
+	log "  $font_name: already installed"
+	exit 0
+fi
+
+tag=$(github_latest_tag ryanoasis/nerd-fonts)
+[[ -z $tag ]] && { 
+	log "  $font_name: could not query latest release"
+	exit 1
+}
+
+temp=$(mktemp -d) || exit 1
+execute mkdir -p "$font_dir"
+execute curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/download/$tag/JetBrainsMono.zip" -o "$temp/JetBrainsMono.zip"
+execute unzip -oq "$temp/JetBrainsMono.zip" -d "$font_dir"
+execute fc-cache -f "$font_dir"
+rm -rf "$temp"
+log "  $font_name: installed $tag to $font_dir"

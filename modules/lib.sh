@@ -62,6 +62,11 @@ case "$(uname -m)" in
 		;;
 esac
 
+IS_WSL=0
+if [[ $OS_TAG == "linux" ]] && grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
+	IS_WSL=1
+fi
+
 LOCAL_PREFIX="$HOME/.local"
 LOCAL_BIN="$LOCAL_PREFIX/bin"
 
