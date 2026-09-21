@@ -1,99 +1,179 @@
 #!/usr/bin/env bash
 
+set -o pipefail
+
 usage() {
 	cat <<-EOF
-	Usage: ./setup [options]
+	Usage: ./setup [options] [module ...]
 
-	Options:
-	  -d, --dry               Show what would be setup, without executing
+	Runs the modules in the common folder, then the modules for this OS.
+	A module is an executable file in one of those directories.
+	Modules are ran in filename order.
 
-	  -f, --filter <list>     Only setup modules matching these comma-separated terms
-	                          e.g. --filter tmux,neovim
+	Arguments:
+	
+	  Options:
+	    -d, --dry             Show what would be executed. Change nothing.
 
-	  -l, --list              List available scripts for this OS and exit
+	    -l, --list            List available modules for this OS
 
-	  -h, --help              Shows this help
+	    -h, --help            Show this help
+
+	  Module ...              Setup only the named modules (default: all)
+
 	EOF
 }
 
-script_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-filter=""
-dry="0"
-list="0"
+# CD to the repo directory so it can find modules when ran from a different directory
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-while [[ $# > 0 ]]; do
+dry=0
+list=0
+only_modules=()
+
+while [[ $# -gt 0 ]]; do
 	case "$1" in
-		-d|--dry)
-			dry="1" 
-			;;
-		-f|--filter)
-			filter="$2"
-			shift
-			;;
-		-f=*|--filter=*)
-			filter="${1#*=}"
-			;;
-		-l|--list)
-			list="1"
-			;;
-		-h|--help)
-			usage
-			exit 0
-			;;
-		*)
-			echo "Unknown option: $1" >&2
-			usage >&2
-			exit 1
-			;;
+		-d|--dry) dry=1; shift ;;
+		-l|--list) list=1; shift ;;
+		-h|--help) usage; exit 0 ;;
+		-*) echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;
+		*) only_modules+=("$1");  shift ;;
 	esac
-	shift
 done
 
+# Dry is used by lib.sh so it must be exported
 export dry
 
-case "$(uname -s)" in
-	Darwin) os="mac" ;;
-	Linux) os="ubuntu" ;;
-	*) echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
+cd "$repo"
+
+source ./modules/lib.sh || { echo "setup: modules/lib.sh refused to load" >&2; exit 1; }
+
+case "$OS_TAG" in
+	macos) os=mac ;;
+	linux) os=ubuntu ;;
+	*) echo "setup: no module directory for OS_TAG=$OS_TAG" >&2; exit 1 ;;
 esac
 
-cd $script_dir
-source ./modules/lib.sh
+modules_dir="modules/#os"
+[[ -d $modules_dir ]] || { echo "setup: no module directory: $modules_dir" >&2; exit 1; }
 
-#log "${script_dir/#$HOME/\~} -- os:$os -- $filter"
+warn() { log "WARNING: $*" >&2; }
 
-modules_dir="./modules/$os"
-[[ -d $modules_dir ]] || { echo "No scripts directory: $modules_dir" >&2; exit 1; }
+if [[ -t 1 ]]; then
+	BOLD=$'\033[1;4m'
+	RESET=$'\033[0m'
+else
+	BOLD=$''
+	RESET=$''
+fi
 
-scripts=$(find ./modules/common "$modules_dir" -maxdepth 1 -mindepth 1 -type f ! -name '*.sh' 2>/dev/null | sort)
+RULE='                                                                '
+header() {
+	local text=" $1 " pad rest
+	pad=$(( (${#RULE} - ${#text}) / 2 ))
+	[[ $pad -lt 3 ]] && pad=3
+	rest=$(( ${#RULE} - pad - ${#text} ))
+	[[ $rest -lt 3 ]] && rest=3
+	echo
+	log  "${BOLD}${RULE:0:pad}${text}${RULE:0:rest}${RESET}"
+}
 
-if [[ -z $scripts ]]; then
-	echo "No executable scripts found in: ./modules/common or $modules_dir" >&2
+modules=()
+for dir in modules/common "$modules_dir"; do
+	[[ -d $dir ]] || continue
+	for path in "$dir"/*; do
+		[[ -f $path ]] || continue
+		[[ $path != *.sh ]] || continue
+		modules+=("$path")
+	done
+done
+
+if [[ ${#modules[@]} -eq 0 ]]; then
+	echo "setup: no modules found in modules/common or $modules_dir" >&2
 	exit 1
 fi
 
-if [[ $list == "1" ]]; then
-	echo "Listing all scripts for $os:"
-	for script in $scripts; do
-		[[ -x $script ]] || { log "Skipped (not executable): $script"; continue; }
-		echo "  $(basename "$script")"
+wanted() {
+	[[ ${#only_modules[@]} -eq 0 ]] && return 0
+	local m
+	for m in "${only_modules[@]}"; do
+		[[ $m == "$1" || $m == "${1#*-}" ]] && return 0
 	done
+	return 1
+}
+
+if [[ $only_n -gt 0 ]]; then
+	for m in "${only_modules[@]}"; do
+		hit=0
+		for path in "${modules[@]}"; do
+			base=$(basename "$path")
+			if -- $m == "$base" || $m == "${bas#*-}" ]]; then
+				hit=1
+				break
+			fi
+		done
+		[[ $hit -eq 1 ]] || warn "no module named: $m"
+	done
+fi
+
+if [[ $list -eq 1 ]]; then
+	echo "Modules for $os:"
+	for path in "${modules[@]}"; do
+		base=$(basename "$path")
+
+		mark=" "
+		if [[ ! -x $path ]]; then
+			mark="!"
+		elif ! wanted "$base"; then
+			mark="-"
+		fi
+
+		printf '  %s %-22s %s\n' "$mark" "$base" "${path%/*}"
+	done
+	echo
+	echo "  !  not executable"
+	echo "  -  not named on the command line"
 	exit 0
 fi
 
-filter_re="${filter//,/|}"
+log "setup: os=$os pm=$PM arch=$ARCH_TAG"
+if [[ $IS_WSL -eq 1 ]]; then
+	log "setup: WS: detected"
+fi
 
-for script in $scripts; do
-	name="${script#./modules/}"
+found=0
+ran=0
+failed=()
 
-	[[ -x $script ]] || { log "Skipped (not executable): $script"; continue; }
-	
-	if [[ -n $filter_re ]] && ! echo "$script" | grep -qE "$filter_re"; then
-		log "Filtered: $name"
+for path in "${modules[@]}"; do
+	base=$(basename "$path")
+
+	wanted "$base" || continue
+	found=1
+
+	if [[ ! -x $path ]]; then
+		warn "skipped, not executable: $base"
 		continue
 	fi
+	
+	header "$base"
 
-	log "------ $name ------"
-	"$script"
-
+	if "$path"; then
+		ran=$((ran + 1))
+	else
+		status=$?
+		warn "$base failed (exit $status)"
+		failed+=("$base")
+	fi
 done
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+	log "modules failed: ${failed[*]}"
+	exit 1
+fi
+
+header "summary"
+log "modules run: $ran"
+
+
+exit 0
