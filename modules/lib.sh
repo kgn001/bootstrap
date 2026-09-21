@@ -9,14 +9,17 @@ dry="${dry:-0}"
 
 log() {
 	if [[ $dry == "1" ]]; then
-		echo "[DRY_RUN]: $@"
+		echo "[DRY_RUN]: ${*//$HOME/\~}"
 	else
-		echo "$@"
+		echo "${*//$HOME/\~}"
 	fi
 }
 
+warn() { log "WARNING: $*" >&2; }
+
+
 execute() {
-	log "  execute $@"
+	log "  execute $*" 
         if [[ $dry == "1" ]]; then
                 return
         fi
@@ -131,7 +134,7 @@ ensure_github_release() {
 		log " $cmd: pinned to $want"
 	else
 		want=$(github_latest_tag "$repo")
-		[[ -z $want ]] && { log " $cmd: could not query latest release"; return 1; }
+		[[ -z $want ]] && { warn " $cmd: could not query latest release"; return 1; }
 	fi
 
 	if command -v "$cmd" >/dev/null 2>&1; then
@@ -195,7 +198,7 @@ ensure() {
 	local latest
 	latest=$(pkg_latest "$pkg")
 	if [[ -z $latest ]]; then
-		log " $cmd: $current already installed, but $PM has no candidate for '$pkg'"
+		warn " $cmd: $current already installed, $PM has no candidate for '$pkg'"
 	elif [[ $current != *"$latest"* ]]; then
 		log " $cmd: update available ($current -> $latest)"
 		confirm "  upgrade $cmd?" && pkg_upgrade "$pkg"
