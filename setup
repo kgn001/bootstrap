@@ -54,7 +54,7 @@ case "$OS_TAG" in
 	*) echo "setup: no module directory for OS_TAG=$OS_TAG" >&2; exit 1 ;;
 esac
 
-modules_dir="modules/#os"
+modules_dir="modules/$os"
 [[ -d $modules_dir ]] || { echo "setup: no module directory: $modules_dir" >&2; exit 1; }
 
 warn() { log "WARNING: $*" >&2; }
@@ -102,12 +102,12 @@ wanted() {
 	return 1
 }
 
-if [[ $only_n -gt 0 ]]; then
+if [[ ${#only_modules[@]} -gt 0 ]]; then
 	for m in "${only_modules[@]}"; do
 		hit=0
 		for path in "${modules[@]}"; do
 			base=$(basename "$path")
-			if -- $m == "$base" || $m == "${bas#*-}" ]]; then
+			if [[ $m == "$base" || $m == "${base#*-}" ]]; then
 				hit=1
 				break
 			fi
@@ -138,7 +138,7 @@ fi
 
 log "setup: os=$os pm=$PM arch=$ARCH_TAG"
 if [[ $IS_WSL -eq 1 ]]; then
-	log "setup: WS: detected"
+	log "setup: WSL: detected"
 fi
 
 found=0
