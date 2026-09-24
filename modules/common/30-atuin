@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+
+ATUIN_VERSION="18.23.0"
+atuin_bin="$LOCAL_BIN/atuin"
+
+if [[ $("atuin_bin" --version 2>/dev/null) == *"ATUIN_VERSION"* ]]; then
+	log "  atuin: up to date ($ATUIN_VERSION)"
+else
+	execute env ATUIN_INSTALL_DIR="$LOCAL_BIN" ATUIN_NO_MODIFY_PATH=1 sh -c "curl -fsSL https://github.com/atuinsh/atuin/releases/download/v$ATUIN_VERSION/atuin-installer.sh | sh"
+fi
+log "If this is the first time Atuin has been installed on this system, run atuin import bash to import any existing bash history."
