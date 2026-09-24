@@ -5,9 +5,9 @@ brew_bin="/opt/homebrew/bin/brew"
 [[ -x $brew_bin ]] || brew_bin="/usr/local/bin/brew"
 
 if [[ -x $brew_bin ]]; then
-	log "homebrew: already installed"
+	log " homebrew: already installed"
 else
-	log "homebrew: not installed, fetching"
+	log " homebrew: not installed, fetching"
 	execute env NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL \
 		https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi

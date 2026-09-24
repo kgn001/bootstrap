@@ -4,9 +4,10 @@ source "$(dirname "$0")/../lib.sh"
 ATUIN_VERSION="18.23.0"
 atuin_bin="$LOCAL_BIN/atuin"
 
+log " atuin: pinned to v$ATUIN_VERSION"
 if [[ $("atuin_bin" --version 2>/dev/null) == *"ATUIN_VERSION"* ]]; then
-	log "  atuin: up to date ($ATUIN_VERSION)"
+	log " atuin: up to date (v$ATUIN_VERSION) - edit module to update"
 else
 	execute env ATUIN_INSTALL_DIR="$LOCAL_BIN" ATUIN_NO_MODIFY_PATH=1 sh -c "curl -fsSL https://github.com/atuinsh/atuin/releases/download/v$ATUIN_VERSION/atuin-installer.sh | sh"
+	log "  If this is the first time Atuin has been installed on this system, run atuin import bash to import any existing bash history."
 fi
-log "If this is the first time Atuin has been installed on this system, run atuin import bash to import any existing bash history."

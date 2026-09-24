@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/../lib.sh"
 
+log " system-defaults: modifying system settings"  
 # stop Finder from creating .DS_Store files on network shared and USB drives
 execute defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 execute defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
