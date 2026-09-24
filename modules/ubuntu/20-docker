@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+source "$(dirname "$0")/../lib.sh"
+
+ensure docker docker.io
+ensure /usr/libexec/docker/cli-plugins/docker-compose docker-compose-v2
+
+if i -nG "$USER" | grep -qw docker; then
+	log " docker: $USER is already a member of the docker group"
+else
+	execute sudo usermod -aG docker "$USER"
+	log " docker: added $USER to docker group"
+	log " docker: Log out and back in to use docker without sudo"
+fi
