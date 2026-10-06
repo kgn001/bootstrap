@@ -37,10 +37,8 @@ ensure_cask secretive Secretive #SSH keys locked with touch id
 ensure_cask stats Stats #Provides system stats in top bar
 ensure_cask alfred Alfred #Beter search - replaces Alfred
 ensure_cask bitwarden Bitwarden #Password manager
-ensure_cask rectangle Rectangle #Window manager
-ensure_cask dropzone "Dropzone 4" #drag and drop helper in top bar
 ensure_cask moonlight Moonlight #game/desktop streaming client
 ensure_cask discord Discord #chat
-ensure_cask unnaturalscrollwheels UnnaturalScrollWheels #sllows reversing mouse scroll wheel
 ensure_cask vlc VLC #video player
 ensure_cask arduino-ide "Arduino IDE" #for programming arduino and ESP boards
+ensure_cask vorssaint # QOL chaanges, external mouse scrolling fix for example
